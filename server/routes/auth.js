@@ -47,4 +47,35 @@ router.post("/login" , async (req , res) => {
     }
 })
 
+// LOGOUT
+router.post("/logout" , async (req , res) => {
+    try {
+        res.clearCookie("token" , {sameSite:"none" , secure:true})
+        .status(200)
+        .json("User logged out successfully !");
+    } catch (error) {
+        res.status(500).json(error);
+    }
+});
+
+// REFETCH
+router.post("/refetch" , async (req , res) => {
+    const token = req.cookies.token;
+    jwt.verify(token , process.env.JWT_SECRET , {} , async (err , data) => {
+        console.log(data)
+        if (err) {
+            res.status(404).json(err);
+        }
+        try {
+            const id = data._id
+            const user = User.findOne({id:id});
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(500).json(error);
+        }
+    })
+})
+
+
+
 export default router;
