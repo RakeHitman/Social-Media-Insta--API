@@ -1,81 +1,17 @@
 import express from "express";
-import User from "../models/User.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import * as authController from "../controllers/authController.js"
 const router = express.Router();
 
 // REGISTER
-router.post("/register", async (req, res) => {
-    try {
-        const {username , email , password} = req.body;
-        const existingUser = await User.findOne({$or : [{username} , {email}]})
-        if(existingUser) {
-            res.status(500).json("The user already exist with the username and email !")
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword =  bcrypt.hashSync(password , salt);
-        const newUser = new User({...req.body , password : hashedPassword});
-        const saveUser = await newUser.save();
-        res.status(200).json(saveUser);
-        console.log(saveUser);
-    } catch (error) {
-        res.status(500).json(error);
-    }
-})
+router.post("/register", authController.registerController);
 
 // LOGIN
-router.post("/login" , async (req , res) => {
-    try {
-        let user;
-        if ( req.body.email ) {
-            user = await User.findOne({email : req.body.email});
-        } else if ( req.body.username ) {
-            user = await User.findOne({username : req.body.username});
-        } else if (!user) {
-            res.status(404).json("User not found")
-        }
-
-        const match = await bcrypt.compare(req.body.password , user.password);
-        if(!match) {
-            res.status(401).json("Wrong Credentials !")
-        }
-
-        res.status(200).json(user)
-        console.log("A user just logged in !")
-    } catch (error) {
-        res.status(500).json(error);
-    }
-})
+router.post("/login" , authController.loginControlller);
 
 // LOGOUT
-router.post("/logout" , async (req , res) => {
-    try {
-        res.clearCookie("token" , {sameSite:"none" , secure:true})
-        .status(200)
-        .json("User logged out successfully !");
-    } catch (error) {
-        res.status(500).json(error);
-    }
-});
+router.post("/logout" , authController.loginControlller);
 
 // REFETCH
-router.post("/refetch" , async (req , res) => {
-    const token = req.cookies.token;
-    jwt.verify(token , process.env.JWT_SECRET , {} , async (err , data) => {
-        console.log(data)
-        if (err) {
-            res.status(404).json(err);
-        }
-        try {
-            const id = data._id
-            const user = User.findOne({id:id});
-            res.status(200).json(user);
-        } catch (error) {
-            res.status(500).json(error);
-        }
-    })
-})
-
-
+router.post("/refetch" , authController.refetchController);
 
 export default router;
