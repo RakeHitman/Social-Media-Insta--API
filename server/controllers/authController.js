@@ -17,11 +17,11 @@ export const registerController = async (req, res , next) => {
         res.status(200).json(saveUser);
         console.log(saveUser);
     } catch (error) {
-        res.status(500).json(error);
+        next(error);
     }
 }
 
-export const loginControlller = async (req , res) => {
+export const loginControlller = async (req , res , next) => {
     try {
         let user;
         if ( req.body.email ) {
@@ -29,28 +29,28 @@ export const loginControlller = async (req , res) => {
         } else if ( req.body.username ) {
             user = await User.findOne({username : req.body.username});
         } else if (!user) {
-            res.status(404).json("User not found")
+            throw new customError("User not to be found" , 404);
         }
 
         const match = await bcrypt.compare(req.body.password , user.password);
         if(!match) {
-            res.status(401).json("Wrong Credentials !")
+            throw new customError("Wrong credentials" , 401)
         }
 
         res.status(200).json(user)
         console.log("A user just logged in !")
-    } catch (error) {
-        res.status(500).json(error);
+    } catch (error) { 
+        next(error);
     }
 }
 
-export const logoutController = async (req , res) => {
+export const logoutController = async (req , res , next) => {
     try {
         res.clearCookie("token" , {sameSite:"none" , secure:true})
         .status(200)
         .json("User logged out successfully !");
     } catch (error) {
-        res.status(500).json(error);
+        next(error);
     }
 }
 
@@ -59,14 +59,14 @@ export const refetchController = async (req , res) => {
     jwt.verify(token , process.env.JWT_SECRET , {} , async (err , data) => {
         console.log(data)
         if (err) {
-            res.status(404).json(err);
+            throw new customError(err , 404)
         }
         try {
             const id = data._id
             const user = User.findOne({id:id});
             res.status(200).json(user);
         } catch (error) {
-            res.status(500).json(error);
+            next(error)
         }
     })
 }
