@@ -1,13 +1,14 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { customError } from "../../middlewares/error.js";
 
-export const registerController = async (req, res) => {
+export const registerController = async (req, res , next) => {
     try {
         const {username , email , password} = req.body;
         const existingUser = await User.findOne({$or : [{username} , {email}]})
         if(existingUser) {
-            res.status(500).json("The user already exist with the username and email !")
+            throw new customError("Username or email alrady exists" , 400);
         }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword =  bcrypt.hashSync(password , salt);

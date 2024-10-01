@@ -9,7 +9,7 @@ router.post("/register", authController.registerController);
 router.post("/login" , authController.loginControlller);
 
 // LOGOUT
-router.post("/logout" , authController.loginControlller);
+router.post("/logout" , authController.logoutController);
 
 // REFETCH
 router.post("/refetch" , authController.refetchController);
